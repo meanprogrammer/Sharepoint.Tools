@@ -17,8 +17,8 @@ namespace Sharepoint.Tools
             {
                 //Authenticate with a Tenant Administrator
                 SecureString passWord = new SecureString();
-                foreach (char c in "password".ToCharArray()) passWord.AppendChar(c);
-                tenantContext.Credentials = new SharePointOnlineCredentials("admin@yoursite.onmicrosoft.com", passWord);
+                foreach (char c in "Verbinden1".ToCharArray()) passWord.AppendChar(c);
+                tenantContext.Credentials = new SharePointOnlineCredentials("vdudan@adbdev.onmicrosoft.com", passWord);
 
                 var tenant = new Tenant(tenantContext);
 
