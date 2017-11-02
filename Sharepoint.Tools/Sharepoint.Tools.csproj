@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Online.SharePoint.Client.Tenant">
+      <HintPath>packages\Microsoft.Online.SharePoint.Client.Tenant.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.SharePoint.Client, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>..\packages\SharePoint.Client.15.0.0\lib\Microsoft.SharePoint.Client\Microsoft.SharePoint.Client.dll</HintPath>
       <Private>True</Private>
@@ -56,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppInstaller.cs" />
+    <Compile Include="CreateSite.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkflowUpdater.cs" />

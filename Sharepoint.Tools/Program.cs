@@ -13,8 +13,11 @@ namespace Sharepoint.Tools
     {
         static void Main(string[] args)
         {
-            AppInstaller apps = new AppInstaller();
-            apps.Execute();
+            CreateSite cs = new CreateSite();
+            cs.Execute();
+
+            //AppInstaller apps = new AppInstaller();
+            //apps.Execute();
             
             //WorkflowUpdater workflow = new WorkflowUpdater();
             //workflow.ExecuteUpdate();
