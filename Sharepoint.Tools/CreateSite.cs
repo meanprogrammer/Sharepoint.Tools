@@ -1,11 +1,9 @@
 ﻿using Microsoft.Online.SharePoint.TenantAdministration;
 using Microsoft.SharePoint.Client;
+using OfficeDevPnP.Core.Sites;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Sharepoint.Tools
 {
@@ -20,41 +18,38 @@ namespace Sharepoint.Tools
                 foreach (char c in "Verbinden1".ToCharArray()) passWord.AppendChar(c);
                 tenantContext.Credentials = new SharePointOnlineCredentials("vdudan@adbdev.onmicrosoft.com", passWord);
 
-                var tenant = new Tenant(tenantContext);
+                TeamSiteCollectionCreationInformation siteInformation = new TeamSiteCollectionCreationInformation() { Alias = "foo88", DisplayName = "foo88", IsPublic = true };
 
-                //Properties of the New SiteCollection
-                var siteCreationProperties = new SiteCreationProperties();
-                //New SiteCollection Url
-                siteCreationProperties.Url = "https://adbdev.sharepoint.com/teams/foo41";
-                //Title of the Root Site
-                siteCreationProperties.Title = "Site Created from Code";
-                //Email of Owner
-                siteCreationProperties.Owner = "vdudan@adbdev.onmicrosoft.com";
-                //Template of the Root Site. Using Team Site for now.
-                siteCreationProperties.Template = "STS#0";
-                //Storage Limit in MB
-                siteCreationProperties.StorageMaximumLevel = 100;
-                //UserCode Resource Points Allowed
-                siteCreationProperties.UserCodeMaximumLevel = 50;
+                var result = tenantContext.CreateSiteAsync(siteInformation);
+                var returnedContext = result.GetAwaiter().GetResult();
 
-                //Create the SiteCollection
-                SpoOperation spo = tenant.CreateSite(siteCreationProperties);
+                var web = returnedContext.Web;
+                returnedContext.Load(web);
+                returnedContext.Load(web.Lists);
+                returnedContext.ExecuteQuery();
 
-                tenantContext.Load(tenant);
+                web.Lists.EnsureSiteAssetsLibrary();
+                returnedContext.ExecuteQuery();
 
-                //We will need the IsComplete property to check if the provisioning of the Site Collection is complete.
-                tenantContext.Load(spo, i => i.IsComplete);
+                var site = returnedContext.Site;
+                returnedContext.Load(site);
+                returnedContext.ExecuteQuery();
 
-                tenantContext.ExecuteQuery();
+                Tenant t = new Tenant(tenantContext);
+                var details = t.GetSitePropertiesByUrl(returnedContext.Url, true);
+                t.Context.Load(details);
+                t.Context.ExecuteQuery();
 
-                //Check if provisioning of the SiteCollection is complete.
-                while (!spo.IsComplete)
-                {
-                    //Wait for 30 seconds and then try again
-                    System.Threading.Thread.Sleep(30000);
-                    spo.RefreshLoad();
-                    tenantContext.ExecuteQuery();
-                }
+                Console.WriteLine(details.Status);
+
+                //No Script Site
+                t.SetSiteProperties(returnedContext.Url, noScriptSite: false);
+                t.Context.ExecuteQuery();
+
+                details = t.GetSitePropertiesByUrl(returnedContext.Url, true);
+                t.Context.Load(details);
+                t.Context.ExecuteQuery();
+
                 Console.WriteLine("SiteCollection Created.");
             }
         }
