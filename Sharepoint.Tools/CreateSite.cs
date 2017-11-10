@@ -9,7 +9,12 @@ namespace Sharepoint.Tools
 {
     public class CreateSite
     {
-        public void Execute()
+        private string _siteName = string.Empty;
+
+        public CreateSite() { }
+        public CreateSite(string siteName) { _siteName = siteName; }
+
+        public string Execute()
         {
             using (ClientContext tenantContext = new ClientContext("https://adbdev-admin.sharepoint.com/"))
             {
@@ -18,7 +23,7 @@ namespace Sharepoint.Tools
                 foreach (char c in "Verbinden1".ToCharArray()) passWord.AppendChar(c);
                 tenantContext.Credentials = new SharePointOnlineCredentials("vdudan@adbdev.onmicrosoft.com", passWord);
 
-                TeamSiteCollectionCreationInformation siteInformation = new TeamSiteCollectionCreationInformation() { Alias = "foo88", DisplayName = "foo88", IsPublic = true };
+                TeamSiteCollectionCreationInformation siteInformation = new TeamSiteCollectionCreationInformation() { Alias = _siteName, DisplayName = _siteName, IsPublic = true };
 
                 var result = tenantContext.CreateSiteAsync(siteInformation);
                 var returnedContext = result.GetAwaiter().GetResult();
@@ -51,6 +56,8 @@ namespace Sharepoint.Tools
                 t.Context.ExecuteQuery();
 
                 Console.WriteLine("SiteCollection Created.");
+
+                return returnedContext.Url;
             }
         }
     }

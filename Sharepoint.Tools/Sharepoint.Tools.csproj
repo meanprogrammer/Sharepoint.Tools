@@ -154,6 +154,7 @@
     <Compile Include="CreateSite.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TemplateManager.cs" />
     <Compile Include="WorkflowUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
