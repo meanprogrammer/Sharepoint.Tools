@@ -55,6 +55,51 @@ namespace Sharepoint.Tools
             return value;
         }
 
+        public static ProvisioningTemplate GetProvisioningTemplateFromFile(ConsoleColor defaultForeground, string webUrl, string userName, SecureString pwd)
+        {
+            using (var ctx = new ClientContext(webUrl))
+            {
+                // ctx.Credentials = new NetworkCredentials(userName, pwd);
+                ctx.Credentials = new SharePointOnlineCredentials(userName, pwd);
+                ctx.RequestTimeout = Timeout.Infinite;
+
+                // Just to output the site details
+                Web web = ctx.Web;
+                ctx.Load(web, w => w.Title);
+                ctx.ExecuteQueryRetry();
+
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("Your site title is:" + ctx.Web.Title);
+                Console.ForegroundColor = defaultForeground;
+
+                ProvisioningTemplateCreationInformation ptci
+                        = new ProvisioningTemplateCreationInformation(ctx.Web);
+
+                // Create FileSystemConnector to store a temporary copy of the template 
+                ptci.FileConnector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
+                ptci.PersistBrandingFiles = true;
+                ptci.PersistPublishingFiles = true;
+                ptci.HandlersToProcess = Handlers.All;
+
+                ptci.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
+                {
+                    // Only to output progress for console UI
+                    Console.WriteLine("{0:00}/{1:00} - {2}", progress, total, message);
+                };
+
+                // Execute actual extraction of the template
+                //ProvisioningTemplate template = ctx.Web.GetProvisioningTemplate(ptci);
+
+                // We can serialize this template to save and reuse it
+                // Optional step 
+                XMLTemplateProvider provider =
+                        new XMLFileSystemTemplateProvider(@"C:\Users\vd2\PROV\PNP", "");
+                ProvisioningTemplate template = provider.GetTemplate(@"C:\Users\vd2\PROV\PNP\All.pnp");
+
+                return template;
+            }
+        }
+
         public static ProvisioningTemplate GetProvisioningTemplate(ConsoleColor defaultForeground, string webUrl, string userName, SecureString pwd)
         {
             using (var ctx = new ClientContext(webUrl))
@@ -79,6 +124,8 @@ namespace Sharepoint.Tools
                 ptci.FileConnector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
                 ptci.PersistBrandingFiles = true;
                 ptci.PersistPublishingFiles = true;
+                //ptci.PersistMultiLanguageResources = true;
+                ptci.IncludeNativePublishingFiles = true;
                 ptci.HandlersToProcess = Handlers.All;
                 
                 ptci.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
@@ -116,6 +163,7 @@ namespace Sharepoint.Tools
                 ProvisioningTemplateApplyingInformation ptai
                         = new ProvisioningTemplateApplyingInformation();
                 ptai.ClearNavigation = true;
+                ptai.HandlersToProcess = Handlers.All;
                 ptai.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
                 {
                     Console.WriteLine("{0:00}/{1:00} - {2}", progress, total, message);
