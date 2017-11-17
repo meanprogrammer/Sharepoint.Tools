@@ -139,9 +139,10 @@ namespace Sharepoint.Tools
 
                 // We can serialize this template to save and reuse it
                 // Optional step 
+
                 XMLTemplateProvider provider =
                         new XMLFileSystemTemplateProvider(@"C:\Users\vd2\PROV\PNP", "");
-                provider.SaveAs(template, "All.pnp");
+                provider.SaveAs(template, "All.xml");
 
                 return template;
             }
@@ -163,7 +164,46 @@ namespace Sharepoint.Tools
                 ProvisioningTemplateApplyingInformation ptai
                         = new ProvisioningTemplateApplyingInformation();
                 ptai.ClearNavigation = true;
-                ptai.HandlersToProcess = Handlers.All;
+                //ptai.HandlersToProcess = Handlers.All;
+                ptai.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
+                {
+                    Console.WriteLine("{0:00}/{1:00} - {2}", progress, total, message);
+                };
+
+                FileSystemConnector connector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
+                template.Connector = connector;
+
+                web.ApplyProvisioningTemplate(template, ptai);
+
+            }
+        }
+
+
+        public static void ApplyProvisioningTemplate(string webUrl, string userName, SecureString pwd)
+        {
+            using (ClientContext targetContext = new ClientContext(webUrl))
+            {
+                targetContext.Credentials = new SharePointOnlineCredentials(userName, pwd);
+                targetContext.RequestTimeout = Timeout.Infinite;
+
+                var web = targetContext.Web;
+                targetContext.Load(web);
+                targetContext.ExecuteQuery();
+
+                // Configure the XML file system provider
+                XMLTemplateProvider provider =
+                new XMLFileSystemTemplateProvider(@"C:\Users\vd2\PROV\PNP", string.Empty);
+
+                // Load the template from the XML stored copy
+                ProvisioningTemplate template = provider.GetTemplate(
+                  @"C:\Users\vd2\PROV\PNP\collabPP.xml");
+
+   
+
+                ProvisioningTemplateApplyingInformation ptai
+                        = new ProvisioningTemplateApplyingInformation();
+                ptai.ClearNavigation = true;
+                //ptai.HandlersToProcess = Handlers.All;
                 ptai.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
                 {
                     Console.WriteLine("{0:00}/{1:00} - {2}", progress, total, message);

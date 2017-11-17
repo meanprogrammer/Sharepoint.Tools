@@ -3,7 +3,7 @@ using Microsoft.SharePoint.Client;
 using OfficeDevPnP.Core.Sites;
 using System;
 using System.Security;
-
+using System.Threading;
 
 namespace Sharepoint.Tools
 {
@@ -22,6 +22,7 @@ namespace Sharepoint.Tools
                 SecureString passWord = new SecureString();
                 foreach (char c in "Verbinden1".ToCharArray()) passWord.AppendChar(c);
                 tenantContext.Credentials = new SharePointOnlineCredentials("vdudan@adbdev.onmicrosoft.com", passWord);
+                tenantContext.RequestTimeout = Timeout.Infinite;
 
                 TeamSiteCollectionCreationInformation siteInformation = new TeamSiteCollectionCreationInformation() { Alias = _siteName, DisplayName = _siteName, IsPublic = true };
 
