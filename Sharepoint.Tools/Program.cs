@@ -19,13 +19,15 @@ namespace Sharepoint.Tools
             string adminTenantSiteUrl = "https://adbdev-admin.sharepoint.com";
             string templateSiteUrl = "https://adbdev.sharepoint.com/teams/template_collab";
             string userName = "vdudan@adbdev.onmicrosoft.com";
-            string siteName = "foo138";
+            string siteName = "foo148";
+
+
 
             SecureString passWord = new SecureString();
             foreach (char c in "Verbinden1".ToCharArray()) passWord.AppendChar(c);
 
             CreateSite cs = new CreateSite(siteName);
-           string createdSiteUrl = cs.Execute();
+            string createdSiteUrl = cs.Execute();
 
             //string createdSiteUrl = string.Format("https://adbdev.sharepoint.com/teams/{0}", siteName);
 
@@ -55,7 +57,7 @@ namespace Sharepoint.Tools
             */
 
             ProvisioningTemplate template = TemplateManager.GetProvisioningTemplate(ConsoleColor.White, templateSiteUrl, userName, passWord);
-
+            
             /*
             ClientSidePageCollection pages = template.ClientSidePages;
             foreach (var p in pages)
@@ -64,10 +66,10 @@ namespace Sharepoint.Tools
             }
             */
 
-            TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord, template);
+            //TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord, template);
 
 
-            //TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord);
+            TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord);
 
             using (ClientContext targetContext = new ClientContext(createdSiteUrl))
             {

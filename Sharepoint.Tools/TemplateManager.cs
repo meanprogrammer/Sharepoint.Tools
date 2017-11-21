@@ -15,6 +15,8 @@ namespace Sharepoint.Tools
 {
     public class TemplateManager
     {
+        private static string _currentDir = System.IO.Directory.GetCurrentDirectory();
+
         private static string GetInput(string label, bool isPassword, ConsoleColor defaultForeground)
         {
             Console.ForegroundColor = ConsoleColor.Green;
@@ -76,11 +78,10 @@ namespace Sharepoint.Tools
                         = new ProvisioningTemplateCreationInformation(ctx.Web);
 
                 // Create FileSystemConnector to store a temporary copy of the template 
-                ptci.FileConnector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
+                ptci.FileConnector = new FileSystemConnector(_currentDir, "");
                 ptci.PersistBrandingFiles = true;
                 ptci.PersistPublishingFiles = true;
                 ptci.HandlersToProcess = Handlers.All;
-
                 ptci.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
                 {
                     // Only to output progress for console UI
@@ -93,8 +94,8 @@ namespace Sharepoint.Tools
                 // We can serialize this template to save and reuse it
                 // Optional step 
                 XMLTemplateProvider provider =
-                        new XMLFileSystemTemplateProvider(@"C:\Users\vd2\PROV\PNP", "");
-                ProvisioningTemplate template = provider.GetTemplate(@"C:\Users\vd2\PROV\PNP\All.pnp");
+                        new XMLFileSystemTemplateProvider(_currentDir, "");
+                ProvisioningTemplate template = provider.GetTemplate(string.Format(@"{0}\All.xml", _currentDir));
 
                 return template;
             }
@@ -121,13 +122,15 @@ namespace Sharepoint.Tools
                         = new ProvisioningTemplateCreationInformation(ctx.Web);
 
                 // Create FileSystemConnector to store a temporary copy of the template 
-                ptci.FileConnector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
+                ptci.FileConnector = new FileSystemConnector(_currentDir, "");
                 ptci.PersistBrandingFiles = true;
                 ptci.PersistPublishingFiles = true;
                 //ptci.PersistMultiLanguageResources = true;
                 ptci.IncludeNativePublishingFiles = true;
-                ptci.HandlersToProcess = Handlers.All;
+                ptci.HandlersToProcess = Handlers.All; // Handlers.AuditSettings | Handlers.ContentTypes | Handlers.CustomActions | Handlers.ExtensibilityProviders | Handlers.Features | Handlers.Fields | Handlers.Files | Handlers.ImageRenditions | Handlers.Lists | Handlers.Navigation | Handlers.PageContents | Handlers.Pages | Handlers.PropertyBagEntries | Handlers.Publishing | Handlers.RegionalSettings | Handlers.SearchSettings | Handlers.SitePolicy | Handlers.SiteSecurity | Handlers.SupportedUILanguages | Handlers.TermGroups | Handlers.WebSettings | Handlers.Workflows;
                 
+
+
                 ptci.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
                 {
                     // Only to output progress for console UI
@@ -141,7 +144,7 @@ namespace Sharepoint.Tools
                 // Optional step 
 
                 XMLTemplateProvider provider =
-                        new XMLFileSystemTemplateProvider(@"C:\Users\vd2\PROV\PNP", "");
+                        new XMLFileSystemTemplateProvider(_currentDir, "");
                 provider.SaveAs(template, "All.xml");
 
                 return template;
@@ -170,9 +173,9 @@ namespace Sharepoint.Tools
                     Console.WriteLine("{0:00}/{1:00} - {2}", progress, total, message);
                 };
 
-                FileSystemConnector connector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
+                FileSystemConnector connector = new FileSystemConnector(_currentDir, "");
                 template.Connector = connector;
-
+                
                 web.ApplyProvisioningTemplate(template, ptai);
 
             }
@@ -192,13 +195,16 @@ namespace Sharepoint.Tools
 
                 // Configure the XML file system provider
                 XMLTemplateProvider provider =
-                new XMLFileSystemTemplateProvider(@"C:\Users\vd2\PROV\PNP", string.Empty);
+                new XMLFileSystemTemplateProvider(_currentDir, string.Empty);
 
                 // Load the template from the XML stored copy
                 ProvisioningTemplate template = provider.GetTemplate(
-                  @"C:\Users\vd2\PROV\PNP\collabPP.xml");
+                  @"All.xml");
 
-   
+
+                FileSystemConnector connector = new FileSystemConnector(_currentDir, "");
+                template.Connector = connector;
+
 
                 ProvisioningTemplateApplyingInformation ptai
                         = new ProvisioningTemplateApplyingInformation();
@@ -209,8 +215,7 @@ namespace Sharepoint.Tools
                     Console.WriteLine("{0:00}/{1:00} - {2}", progress, total, message);
                 };
 
-                FileSystemConnector connector = new FileSystemConnector(@"C:\Users\vd2\PROV\PNP", "");
-                template.Connector = connector;
+                
 
                 web.ApplyProvisioningTemplate(template, ptai);
 
