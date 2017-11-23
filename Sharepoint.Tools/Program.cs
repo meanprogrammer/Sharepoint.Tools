@@ -19,7 +19,7 @@ namespace Sharepoint.Tools
             string adminTenantSiteUrl = "https://adbdev-admin.sharepoint.com";
             string templateSiteUrl = "https://adbdev.sharepoint.com/teams/template_collab";
             string userName = "vdudan@adbdev.onmicrosoft.com";
-            string siteName = "foo148";
+            string siteName = "foo161";
 
 
 
@@ -31,43 +31,8 @@ namespace Sharepoint.Tools
 
             //string createdSiteUrl = string.Format("https://adbdev.sharepoint.com/teams/{0}", siteName);
 
-            /*
-            using (ClientContext targetContext = new ClientContext(createdSiteUrl))
-            {
-                targetContext.Credentials = new SharePointOnlineCredentials(userName, passWord);
-                targetContext.RequestTimeout = Timeout.Infinite;
-
-                string fileRelativeUrl = "SitePages/Home.aspx";
-
-                var web = targetContext.Web;
-                var site = targetContext.Site;
-                targetContext.Load(web);
-                targetContext.Load(site);
-                targetContext.ExecuteQueryRetry();
-                string webUrl = web.EnsureProperty(c => c.ServerRelativeUrl);
-                string serverRelativeUrl = UrlUtility.Combine(webUrl, fileRelativeUrl);
-
-                var file = web.GetFileByServerRelativeUrl(serverRelativeUrl);
-
-                targetContext.Load(file, f => f.Name);
-                targetContext.ExecuteQueryRetry();
-                file.DeleteObject();
-                targetContext.ExecuteQueryRetry();
-            }
-            */
 
             ProvisioningTemplate template = TemplateManager.GetProvisioningTemplate(ConsoleColor.White, templateSiteUrl, userName, passWord);
-            
-            /*
-            ClientSidePageCollection pages = template.ClientSidePages;
-            foreach (var p in pages)
-            {
-                p.Overwrite = true;
-            }
-            */
-
-            //TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord, template);
-
 
             TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord);
 
@@ -99,15 +64,77 @@ namespace Sharepoint.Tools
                     {
                         foreach (var item in ct.FieldLinks)
                         {
-                            if (item.Name == "ADBDocumentTypeValue")
+                            if (item.Name == "ADBDocumentTypeValue" || item.Name == "ADBContentGroup")
                             {
                                 item.Hidden = true;
-                                Console.WriteLine("Updated Setting");
+                                Console.WriteLine("Updated Field Visibility Setting");
                             }
                         }
                         ct.Update(false);
                     }
                 }
+
+
+                targetContext.Load(doc.WorkflowAssociations);
+                targetContext.ExecuteQuery();
+
+                var servicesManager = new WorkflowServicesManager(targetContext, web);
+                var subscriptionService = servicesManager.GetWorkflowSubscriptionService();
+                var subscriptions = subscriptionService.EnumerateSubscriptionsByList(doc.Id);
+
+                targetContext.Load(subscriptions);
+                targetContext.ExecuteQuery();
+
+                var wfh = web.Lists.GetByTitle("Workflow History");
+                var wft = web.Lists.GetByTitle("Update Document Type Workflow Tasks");
+                var dwt = web.Lists.GetByTitle("Workflow Tasks");
+                targetContext.Load(wfh);
+                targetContext.Load(wft);
+                targetContext.Load(dwt);
+                targetContext.ExecuteQuery();
+
+
+                foreach (var s in subscriptions)
+                {
+                    Console.WriteLine(s.Name);
+
+                    if (
+                        s.Name.Equals("Update ADB Project Document Type") ||
+                        s.Name.Equals("Update ADB Country Document Type") ||
+                        s.Name.Equals("Update ADB Document Type")
+                        )
+                    {
+                        s.SetProperty("HistoryListId", wfh.Id.ToString());
+                        s.SetProperty("TaskListId", wft.Id.ToString());
+                        s.SetProperty("FormData", string.Empty);
+                        subscriptionService.PublishSubscriptionForList(s, doc.Id);
+                    }
+                    else
+                    {
+                        s.SetProperty("HistoryListId", wfh.Id.ToString());
+                        s.SetProperty("TaskListId", dwt.Id.ToString());
+                        s.SetProperty("FormData", "");
+                        subscriptionService.PublishSubscriptionForList(s, doc.Id);
+                    }
+                }
+                targetContext.ExecuteQuery();
+
+
+                string[] fieldsForRemoval = new string[] { "Update ADB Country Document Type", "Update ADB Document Type", "Update ADB Project Document Type", "Log Activity", "Log Activity Native" };
+
+                foreach (string fieldName in fieldsForRemoval)
+                {
+                    var f = doc.Fields.GetByInternalNameOrTitle(fieldName);
+                    targetContext.Load(f);
+                    targetContext.ExecuteQueryRetry();
+
+                    if (f != null)
+                    {
+                        f.DeleteObject();
+                        targetContext.ExecuteQueryRetry();
+                    }
+                }
+
 
 
 
@@ -121,7 +148,7 @@ namespace Sharepoint.Tools
 
             //Console.WriteLine(site.Url.ToString());
 
-
+            Console.WriteLine("END");
             Console.ReadLine();
         }
     }

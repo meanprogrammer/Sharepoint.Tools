@@ -127,8 +127,7 @@ namespace Sharepoint.Tools
                 ptci.PersistPublishingFiles = true;
                 //ptci.PersistMultiLanguageResources = true;
                 ptci.IncludeNativePublishingFiles = true;
-                ptci.HandlersToProcess = Handlers.All; // Handlers.AuditSettings | Handlers.ContentTypes | Handlers.CustomActions | Handlers.ExtensibilityProviders | Handlers.Features | Handlers.Fields | Handlers.Files | Handlers.ImageRenditions | Handlers.Lists | Handlers.Navigation | Handlers.PageContents | Handlers.Pages | Handlers.PropertyBagEntries | Handlers.Publishing | Handlers.RegionalSettings | Handlers.SearchSettings | Handlers.SitePolicy | Handlers.SiteSecurity | Handlers.SupportedUILanguages | Handlers.TermGroups | Handlers.WebSettings | Handlers.Workflows;
-                
+                ptci.HandlersToProcess = Handlers.AuditSettings | Handlers.ContentTypes | Handlers.CustomActions | Handlers.ExtensibilityProviders | Handlers.Features | Handlers.Fields | Handlers.Files | Handlers.ImageRenditions | Handlers.Lists | Handlers.Navigation | Handlers.PageContents | Handlers.Pages | Handlers.PropertyBagEntries | Handlers.Publishing | Handlers.RegionalSettings | Handlers.SearchSettings | Handlers.SitePolicy | Handlers.SiteSecurity | Handlers.SupportedUILanguages | Handlers.TermGroups | Handlers.WebSettings | Handlers.Workflows;
 
 
                 ptci.ProgressDelegate = delegate (String message, Int32 progress, Int32 total)
@@ -142,6 +141,12 @@ namespace Sharepoint.Tools
 
                 // We can serialize this template to save and reuse it
                 // Optional step 
+
+                ClientSidePageCollection pages = template.ClientSidePages;
+                foreach (var p in pages)
+                {
+                    p.Overwrite = true;
+                }
 
                 XMLTemplateProvider provider =
                         new XMLFileSystemTemplateProvider(_currentDir, "");
