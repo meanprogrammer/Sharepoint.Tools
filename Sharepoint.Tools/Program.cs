@@ -19,7 +19,7 @@ namespace Sharepoint.Tools
             string adminTenantSiteUrl = "https://adbdev-admin.sharepoint.com";
             string templateSiteUrl = "https://adbdev.sharepoint.com/teams/template_collab";
             string userName = "vdudan@adbdev.onmicrosoft.com";
-            string siteName = "foo161";
+            string siteName = "CSharpProvSite4";
 
 
 
