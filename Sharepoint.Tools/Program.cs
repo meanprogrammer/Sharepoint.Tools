@@ -19,39 +19,116 @@ namespace Sharepoint.Tools
             string adminTenantSiteUrl = "https://adbdev-admin.sharepoint.com";
             string templateSiteUrl = "https://adbdev.sharepoint.com/teams/template_collab";
             string userName = "vdudan@adbdev.onmicrosoft.com";
-            string siteName = "CSharpProvSite4";
+            string siteName = "foo214";
 
 
 
             SecureString passWord = new SecureString();
             foreach (char c in "Verbinden1".ToCharArray()) passWord.AppendChar(c);
 
-            CreateSite cs = new CreateSite(siteName);
-            string createdSiteUrl = cs.Execute();
+            //CreateSite cs = new CreateSite(siteName);
+            //string createdSiteUrl = cs.Execute();
 
-            //string createdSiteUrl = string.Format("https://adbdev.sharepoint.com/teams/{0}", siteName);
+            string createdSiteUrl = string.Format("https://adbdev.sharepoint.com/teams/{0}", siteName);
 
 
-            ProvisioningTemplate template = TemplateManager.GetProvisioningTemplate(ConsoleColor.White, templateSiteUrl, userName, passWord);
+            //ProvisioningTemplate template = TemplateManager.GetProvisioningTemplate(ConsoleColor.White, templateSiteUrl, userName, passWord);
 
-            TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord);
+            //TemplateManager.ApplyProvisioningTemplate(createdSiteUrl, userName, passWord);
+
+            
 
             using (ClientContext targetContext = new ClientContext(createdSiteUrl))
             {
+
+
+
                 targetContext.Credentials = new SharePointOnlineCredentials(userName, passWord);
                 targetContext.RequestTimeout = Timeout.Infinite;
 
                 var web = targetContext.Web;
                 targetContext.Load(web);
-                targetContext.ExecuteQueryRetry();
+                targetContext.ExecuteQuery();
+
+
+                OfficeDevPnP.Core.Pages.ClientSidePage homepage = OfficeDevPnP.Core.Pages.ClientSidePage.Load(targetContext, "Home.aspx");
+
+                var firstSection = homepage.Sections.FirstOrDefault();
+                if (firstSection != null)
+                {
+                    var controls = firstSection.Controls;
+                    if (controls != null)
+                    {
+                        foreach (OfficeDevPnP.Core.Pages.ClientSideWebPart ctrl in controls)
+                        {
+                            if (ctrl.Title == "Image")
+                            {
+                                web.SetWebPartProperty("UniqueId", Guid.NewGuid().ToString(), ctrl.InstanceId, "/teams/foo214/SitePages/Home.aspx");
+                            }
+                        }
+                    }
+                }
+            
+
+                homepage.Save();
+
+                targetContext.ExecuteQuery();
+                
+                
+                targetContext.Load(web.RoleDefinitions);
+
+                Microsoft.SharePoint.Client.File ff = web.GetFileByUrl("/teams/foo214/SiteAssets/SitePages/template_pnp/28147-divider.jpg");
+
+                targetContext.Load(ff);
+                targetContext.ExecuteQuery();
+
+                try
+                {
+                    targetContext.ExecuteQuery();
+
+                    foreach (var rd in web.RoleDefinitions)
+                    {
+                        if (rd.Name == "Edit")
+                        {
+                            BasePermissions oldBp = rd.BasePermissions;
+                            oldBp.Clear(PermissionKind.CreateSSCSite);
+
+                            BasePermissions bp = new BasePermissions();
+                            
+              
+                            rd.BasePermissions = new BasePermissions();
+                            rd.BasePermissions = oldBp;
+                            //rd.BasePermissions.Clear(PermissionKind.CreateSSCSite);
+                            rd.Update();
+                            
+                            targetContext.ExecuteQuery();
+                        }
+                    }
+
+                    
+                }
+                catch (Exception)
+                {
+                    targetContext.ExecuteQueryRetry(retryCount:5);
+                }
+
+                return;
+
                 web.EnsureProperties(c => c.Lists);
                 List doc = web.Lists.FirstOrDefault(c => c.Title == "Documents");
 
                 targetContext.Load(doc);
                 targetContext.Load(doc.ContentTypes);
                 var cts = doc.ContentTypes;
-                targetContext.ExecuteQueryRetry();
 
+                try
+                {
+                    targetContext.ExecuteQuery();
+                }
+                catch (Exception)
+                {
+                    targetContext.ExecuteQueryRetry(retryCount: 5);
+                }
 
                 doc.EnsureProperties(c => c.Fields, c => c.ContentTypes);
 
@@ -76,7 +153,15 @@ namespace Sharepoint.Tools
 
 
                 targetContext.Load(doc.WorkflowAssociations);
-                targetContext.ExecuteQuery();
+
+                try
+                {
+                    targetContext.ExecuteQuery();
+                }
+                catch (Exception)
+                {
+                    targetContext.ExecuteQueryRetry(retryCount: 5);
+                }
 
                 var servicesManager = new WorkflowServicesManager(targetContext, web);
                 var subscriptionService = servicesManager.GetWorkflowSubscriptionService();

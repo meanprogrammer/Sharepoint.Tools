@@ -59,8 +59,10 @@ namespace Sharepoint.Tools
 
             var wfh = lists.GetByTitle("Workflow History");
             var wft = lists.GetByTitle("Update Document Type Workflow Tasks");
+            var dwt = lists.GetByTitle("Workflow Tasks");
             ctx.Load(wfh);
             ctx.Load(wft);
+            ctx.Load(dwt);
             ctx.ExecuteQuery();
 
 
@@ -77,6 +79,13 @@ namespace Sharepoint.Tools
                     s.SetProperty("HistoryListId", wfh.Id.ToString());
                     s.SetProperty("TaskListId", wft.Id.ToString());
                     s.SetProperty("FormData", string.Empty);
+                    subscriptionService.PublishSubscriptionForList(s, docs.Id);
+                }
+                else
+                {
+                    s.SetProperty("HistoryListId", wfh.Id.ToString());
+                    s.SetProperty("TaskListId", dwt.Id.ToString());
+                    s.SetProperty("FormData", "");
                     subscriptionService.PublishSubscriptionForList(s, docs.Id);
                 }
             }
